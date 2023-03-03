@@ -23,12 +23,12 @@ namespace BlazorSessionScopedContainer.Services
             _gcTimer = new Timer(new TimerCallback((o) =>
             {
                 OnTick();
-            }), null, 0, 10000);
+            }), null, 0, 60_000 * 3);
         }
 
         private void OnTick()
         {
-            var oldSessions = NSessionHandler.Default().SessionLastActiveTime.Select(p => p).ToList().FindAll(p => (DateTime.Now - p.Value).Seconds > 10);
+            var oldSessions = NSessionHandler.Default().SessionLastActiveTime.Select(p => p).ToList().FindAll(p => (DateTime.Now - p.Value).Minutes > 5);
             for (int i = 0; i < oldSessions.Count; i++)
             {
                 var guid = oldSessions[i];
@@ -50,7 +50,6 @@ namespace BlazorSessionScopedContainer.Services
                     loadedServiceSession.Clear();
                 }
             }
-
         }
 
     }

@@ -13,8 +13,7 @@ namespace BlazorSessionScopedContainer.Core
         internal GarbageCollection GarbageCollection { get; private set; }
         private NSessionHandler()
         {
-            GarbageCollection = new GarbageCollection();
-            
+            GarbageCollection = new GarbageCollection();    
         }
 
         private static NSessionHandler _sessionHandler;
