@@ -31,22 +31,22 @@ namespace BlazorSessionScopedContainer.Services
             var oldSessions = NSessionHandler.Default().SessionLastActiveTime.Select(p => p).ToList().FindAll(p => (DateTime.Now - p.Value).Minutes > 5);
             for (int i = 0; i < oldSessions.Count; i++)
             {
-                var guid = oldSessions[i];
+                var entry = oldSessions[i];
 
-                ((UserNotificationService)NSessionHandler.Default().ServiceInstances[guid.Key][typeof(UserNotificationService)].Value).NotifyUser("The session has been closed. Refresh the page!", UserSessionNotification.SessionNotificationType.SessionClosed);
+                ((UserNotificationService)NSessionHandler.Default().ServiceInstances[entry.Key][typeof(UserNotificationService)].Value).NotifyUser("The session has been closed. Refresh the page!", UserSessionNotification.SessionNotificationType.SessionClosed);
 
-                NSessionHandler.Default().SessionLastActiveTime.Remove(guid.Key, out DateTime dateTime);
-                NSessionHandler.Default().InitializedServices.Remove(guid.Key);
-                NSessionHandler.Default().ServiceInstances.Remove(guid.Key, out Dictionary<Type, Lazy<ISessionScoped>> loadedServiceSession);
+                NSessionHandler.Default().SessionLastActiveTime.Remove(entry.Key, out DateTime dateTime);
+                NSessionHandler.Default().InitializedServices.Remove(entry.Key);
+                NSessionHandler.Default().ServiceInstances.Remove(entry.Key, out Dictionary<Type, Lazy<ISessionScoped>> loadedServiceSession);
 
-                Console.WriteLine($"[*] Session closed for {guid}");
+                Console.WriteLine($"[*] Session closed for {entry}");
                 if (loadedServiceSession != null)
                 {
                     foreach (var item in loadedServiceSession)
                     {
                         item.Value.Value.Dispose();
                     }
-                    Console.WriteLine($"[**] Removed {loadedServiceSession.Count} services for session {guid.Key}");
+                    Console.WriteLine($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");
                     loadedServiceSession.Clear();
                 }
             }
