@@ -23,7 +23,7 @@ namespace BlazorSessionScopedContainer.Services
             _gcTimer = new Timer(new TimerCallback((o) =>
             {
                 OnTick();
-            }), null, 0, 60_000 * 3);
+            }), null, 0, 60_000 * 5);
         }
 
         private void OnTick()

@@ -41,7 +41,7 @@ namespace BlazorSessionScopedContainer.Core
                 NSessionHandler.Default().SessionLastActiveTime[session.Value] = DateTime.Now;
         }
 
-        public void RefreshSesion(Guid session)
+        internal void RefreshSesion(Guid session)
         {
             NSessionHandler.Default().SessionLastActiveTime[session] = DateTime.Now;
         }
@@ -52,7 +52,7 @@ namespace BlazorSessionScopedContainer.Core
             if (!session.HasValue)
                 return default;
 
-            RefreshSesion(session.Value);
+            RefreshSesion();
 
             return (T)NSessionHandler.Default().ServiceInstances[session.Value][typeof(T)].Value;
         }
