@@ -9,11 +9,28 @@ using System.Threading.Tasks;
 
 namespace BlazorSessionScopedContainer.Services
 {
-    internal class GarbageCollection
+    public class NSessionGarbageCollection
     {
         private Timer _gcTimer;
+        private int _timerPeriod = 60_000 * 5;
 
-        internal GarbageCollection()
+        /// <summary>
+        /// In milliseconds
+        /// </summary>
+        public int TimerPeriod
+        {
+            get => _timerPeriod;
+            set
+            {
+                if (_timerPeriod != value)
+                {
+                    _timerPeriod = value;
+                    _gcTimer.Change(0, _timerPeriod);
+                }
+            }
+        }
+
+        internal NSessionGarbageCollection()
         {
             InitializeTimer();
         }
@@ -22,13 +39,13 @@ namespace BlazorSessionScopedContainer.Services
         {
             _gcTimer = new Timer(new TimerCallback((o) =>
             {
-                OnTick();
-            }), null, 0, 60_000 * 5);
+                Collect();
+            }), null, 0, _timerPeriod);
         }
 
-        private void OnTick()
+        private void Collect()
         {
-            var oldSessions = NSessionHandler.Default().SessionLastActiveTime.Select(p => p).ToList().FindAll(p => (DateTime.Now - p.Value).Minutes > 5);
+            var oldSessions = NSessionHandler.Default().SessionLastActiveTime.Select(p => p).ToList().FindAll(p => (DateTime.Now - p.Value).TotalMilliseconds > _timerPeriod);
             for (int i = 0; i < oldSessions.Count; i++)
             {
                 var entry = oldSessions[i];
@@ -54,6 +71,11 @@ namespace BlazorSessionScopedContainer.Services
                     loadedServiceSession.Clear();
                 }
             }
+        }
+
+        public void ForceCollection()
+        {
+            Collect();
         }
 
     }

@@ -12,7 +12,6 @@ namespace BlazorSessionScopedContainer.Core.Data
         where Concrete : class, ISessionScoped
     {
         Type InterfaceType { get; set; }
-
         public ServiceInterfaceEntry(NSessionHandler handler, SessionId sessionId, object[] args) : base(handler, sessionId, args)
         {
             InterfaceType = typeof(Interface);

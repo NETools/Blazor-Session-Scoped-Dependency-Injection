@@ -11,7 +11,8 @@ namespace BlazorSessionScopedContainer.Core
         internal Dictionary<Guid, List<IServiceEntry>> ServiceInstances { get; private set; } = new Dictionary<Guid, List<IServiceEntry>>();
         internal Dictionary<Guid, DateTime> SessionLastActiveTime { get; private set; } = new Dictionary<Guid, DateTime>();
         internal HashSet<Guid> InitializedServices { get; private set; } = new HashSet<Guid>();
-        internal GarbageCollection GarbageCollection { get; private set; }
+        
+        public NSessionGarbageCollection GarbageCollection { get; private set; }
 
         public Action<string> Logger { get; set; } = (message) =>
         {
@@ -20,7 +21,7 @@ namespace BlazorSessionScopedContainer.Core
 
         private NSessionHandler()
         {
-            GarbageCollection = new GarbageCollection();    
+            GarbageCollection = new NSessionGarbageCollection();    
         }
 
         private static NSessionHandler _sessionHandler;

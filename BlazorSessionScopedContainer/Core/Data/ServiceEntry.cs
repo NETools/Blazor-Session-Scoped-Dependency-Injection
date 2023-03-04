@@ -10,7 +10,6 @@ namespace BlazorSessionScopedContainer.Core.Data
     internal class ServiceEntry<T> : IServiceEntry where T : class, ISessionScoped
     {
         private Lazy<T> _service;
-
         public Type ConcreteType { get; set; }
         public ServiceEntry(NSessionHandler handler, SessionId sessionId, object[] args)
         {
