@@ -16,24 +16,6 @@ namespace BlazorSessionScopedContainer.Core
             this._httpContext = _httpContext;
         }
 
-        public void InitializeServiceRoutine(Action<SessionId, NSessionHandler> routine)
-        {
-            var session = GetSession();
-            if (!session.HasValue)
-                return;
-
-            if (!NSessionHandler.Default().InitializedServices.Contains(session.Value))
-            {
-                NSessionHandler.Default().InitializedServices.Add(session.Value);
-                NSessionHandler.Default().SessionLastActiveTime[session.Value] = DateTime.Now;
-
-                var handler = NSessionHandler.Default();
-                var sessionId = new SessionId(session);
-                handler.AddService<UserNotificationService>(sessionId);
-                routine(sessionId, handler);
-            }
-        }
-
         public void RefreshSesion()
         {
             var session = GetSession();
@@ -46,7 +28,7 @@ namespace BlazorSessionScopedContainer.Core
             NSessionHandler.Default().SessionLastActiveTime[session] = DateTime.Now;
         }
 
-        public T GetService<T>() where T : class, ISessionScoped
+        public T? GetService<T>() where T : class, ISessionScoped
         {
             var session = GetSession();
             if (!session.HasValue)
@@ -54,22 +36,47 @@ namespace BlazorSessionScopedContainer.Core
 
             RefreshSesion();
 
-            return (T)NSessionHandler.Default().ServiceInstances[session.Value][typeof(T)].Value;
+            return (T?)NSessionHandler.Default().ServiceInstances[session.Value].Find(p => p.IsEqual<T>())?.GetInstance();
         }
 
-        public void StartSession()
+        public void StartSession(Action<SessionId, NSessionHandler> initRoutine)
         {
             if (_httpContext.HttpContext?.Request.Cookies.ContainsKey("session") == false)
             {
                 _sessionGuid = Guid.NewGuid();
                 _httpContext.HttpContext.Response.Cookies.Append("session", $"{_sessionGuid}");
-                NSessionHandler.Default().ServiceInstances.TryAdd(_sessionGuid, new Dictionary<Type, Lazy<ISessionScoped>>());
+                NSessionHandler.Default().ServiceInstances.TryAdd(_sessionGuid, new List<IServiceEntry>());
                 _sessionNewlySet = true;
             }
 
             if (_sessionNewlySet)
                 RefreshSesion(_sessionGuid);
             else RefreshSesion();
+
+            InitializeSession(initRoutine);
+        }
+
+        private void InitializeSession(Action<SessionId, NSessionHandler> routine)
+        {
+            var session = GetSession();
+            if (!session.HasValue)
+                return;
+
+            if (!NSessionHandler.Default().InitializedServices.Contains(session.Value))
+            {
+                NSessionHandler.Default().InitializedServices.Add(session.Value);
+                NSessionHandler.Default().SessionLastActiveTime[session.Value] = DateTime.Now;
+
+                var handler = NSessionHandler.Default();
+                var sessionId = new SessionId(session);
+                InitializeDefaultServices(sessionId, handler);
+                routine(sessionId, handler);
+            }
+        }
+
+        private void InitializeDefaultServices(SessionId sessionId, NSessionHandler handler)
+        {
+            handler.AddService<UserNotificationService>(sessionId);
         }
 
         public Guid? GetSession()

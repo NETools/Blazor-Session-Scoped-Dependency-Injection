@@ -33,20 +33,24 @@ namespace BlazorSessionScopedContainer.Services
             {
                 var entry = oldSessions[i];
 
-                ((UserNotificationService)NSessionHandler.Default().ServiceInstances[entry.Key][typeof(UserNotificationService)].Value).NotifyUser("The session has been closed. Refresh the page!", UserSessionNotification.SessionNotificationType.SessionClosed);
+                var notificationService = ((UserNotificationService)NSessionHandler
+                    .Default().ServiceInstances[entry.Key]
+                    .Find(p => p.IsEqual(typeof(UserNotificationService))).GetInstance());
+
+                notificationService.NotifyUser("The session has been closed. Refresh the page!", UserSessionNotification.SessionNotificationType.SessionClosed);
 
                 NSessionHandler.Default().SessionLastActiveTime.Remove(entry.Key, out DateTime dateTime);
                 NSessionHandler.Default().InitializedServices.Remove(entry.Key);
-                NSessionHandler.Default().ServiceInstances.Remove(entry.Key, out Dictionary<Type, Lazy<ISessionScoped>> loadedServiceSession);
+                NSessionHandler.Default().ServiceInstances.Remove(entry.Key, out List<IServiceEntry> loadedServiceSession);
 
-                Console.WriteLine($"[*] Session closed for {entry}");
+                NSessionHandler.Default().Logger?.Invoke($"[*] Session closed for {entry}");
                 if (loadedServiceSession != null)
                 {
                     foreach (var item in loadedServiceSession)
                     {
-                        item.Value.Value.Dispose();
+                        item.GetInstance().Dispose();
                     }
-                    Console.WriteLine($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");
+                    NSessionHandler.Default().Logger?.Invoke($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");
                     loadedServiceSession.Clear();
                 }
             }
