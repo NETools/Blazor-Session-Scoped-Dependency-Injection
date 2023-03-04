@@ -1,5 +1,6 @@
 ﻿using BlazorSessionScopedContainer.Attributes;
 using BlazorSessionScopedContainer.Contracts;
+using BlazorSessionScopedContainer.Core.Data;
 using BlazorSessionScopedContainer.Misc;
 using BlazorSessionScopedContainer.Services;
 using System.Collections.Concurrent;
@@ -7,10 +8,16 @@ namespace BlazorSessionScopedContainer.Core
 {
     public class NSessionHandler
     {
-        internal Dictionary<Guid, Dictionary<Type, Lazy<ISessionScoped>>> ServiceInstances { get; private set; } = new Dictionary<Guid, Dictionary<Type, Lazy<ISessionScoped>>>();
+        internal Dictionary<Guid, List<IServiceEntry>> ServiceInstances { get; private set; } = new Dictionary<Guid, List<IServiceEntry>>();
         internal Dictionary<Guid, DateTime> SessionLastActiveTime { get; private set; } = new Dictionary<Guid, DateTime>();
         internal HashSet<Guid> InitializedServices { get; private set; } = new HashSet<Guid>();
         internal GarbageCollection GarbageCollection { get; private set; }
+
+        public Action<string> Logger { get; set; } = (message) =>
+        {
+            Console.WriteLine(message);
+        };
+
         private NSessionHandler()
         {
             GarbageCollection = new GarbageCollection();    
@@ -33,20 +40,52 @@ namespace BlazorSessionScopedContainer.Core
             {
                 if (!ServiceInstances.ContainsKey(session.Guid.Value))
                 {
-                    ServiceInstances.Add(session.Guid.Value, new Dictionary<Type, Lazy<ISessionScoped>>());
+                    ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
                 }
 
-                if (!ServiceInstances[session.Guid.Value].ContainsKey(typeof(T)))
+                if (!ServiceInstances[session.Guid.Value].Exists(p => p.IsEqual<T>()))
                 {
-                    ServiceInstances[session.Guid.Value].Add(typeof(T), new Lazy<ISessionScoped>(() =>
-                    {
-                        return GetInstance<T>(session.Guid, args);
-                    }));
+                    ServiceInstances[session.Guid.Value].Add(new ServiceEntry<T>(this, session, args));
                 }
             }
         }
 
-        private T GetInstance<T>(Guid? session, params object[] args) where T : class, ISessionScoped
+        public void AddService<Interface, Concrete>(SessionId session, params object[] args) 
+            where Interface : class, ISessionScoped 
+            where Concrete : class, Interface
+        {
+            if (session.Guid.HasValue)
+            {
+                if (!ServiceInstances.ContainsKey(session.Guid.Value))
+                {
+                    ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
+                }
+
+                if (!ServiceInstances[session.Guid.Value].Exists(p => p.IsEqual<Interface>()))
+                {
+                    ServiceInstances[session.Guid.Value].Add(new ServiceInterfaceEntry<Interface, Concrete>(this, session, args));
+                }
+            }
+        }
+
+        public void RemoveService<T>(SessionId session) where T : class, ISessionScoped
+        {
+            if (session.Guid.HasValue)
+            {
+                if (!ServiceInstances.ContainsKey(session.Guid.Value))
+                {
+                    ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
+                }
+
+                var instance = ServiceInstances[session.Guid.Value].Find(p => p.IsEqual<T>());
+                if (instance != null)
+                {
+                    ServiceInstances[session.Guid.Value].Remove(instance);
+                }
+            }
+        }
+
+        internal T GetInstance<T>(Guid? session, params object[] args) where T : class, ISessionScoped
         {
             var instanceType = typeof(T);
             var ctors = instanceType.GetConstructors();
@@ -75,8 +114,10 @@ namespace BlazorSessionScopedContainer.Core
                     var paramInterfaces = param.ParameterType.GetInterfaces();
                     if (paramInterfaces.Contains(typeof(ISessionScoped)))
                     {
-                        if (ServiceInstances[session.Value].ContainsKey(param.ParameterType))
-                            dependencies.Add(ServiceInstances[session.Value][param.ParameterType].Value);
+                        var suitableService = ServiceInstances[session.Value].Find(p => p.IsEqual(param.ParameterType));
+
+                        if (suitableService != null)
+                            dependencies.Add(suitableService.GetInstance());
                     }
                 }
             }
@@ -89,9 +130,5 @@ namespace BlazorSessionScopedContainer.Core
 
             return instance;
         }
-
-
-
-
     }
 }
