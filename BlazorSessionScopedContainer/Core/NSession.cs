@@ -1,6 +1,7 @@
 ﻿using BlazorSessionScopedContainer.Contracts;
 using BlazorSessionScopedContainer.Services;
 using Microsoft.AspNetCore.Http;
+using System.Diagnostics;
 
 namespace BlazorSessionScopedContainer.Core
 {

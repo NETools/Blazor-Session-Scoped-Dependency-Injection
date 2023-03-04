@@ -9,7 +9,7 @@ namespace BlazorSessionScopedContainer.Core.Data
 {
     internal class ServiceInterfaceEntry<Interface, Concrete> : ServiceEntry<Concrete>
         where Interface : class, ISessionScoped
-        where Concrete : class, ISessionScoped
+        where Concrete : class, Interface
     {
         Type InterfaceType { get; set; }
         public ServiceInterfaceEntry(NSessionHandler handler, SessionId sessionId, object[] args) : base(handler, sessionId, args)
