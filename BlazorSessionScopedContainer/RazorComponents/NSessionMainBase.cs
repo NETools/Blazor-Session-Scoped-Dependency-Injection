@@ -10,7 +10,7 @@ namespace BlazorSessionScopedContainer.RazorComponents
         private UserNotificationService _sessionNotification;
 
         [Inject]
-        public NSession Container { get; set; }
+        public NSession Session { get; set; }
 
         public bool IsSessionClosed { get; private set; }
 
@@ -37,7 +37,7 @@ namespace BlazorSessionScopedContainer.RazorComponents
         {
             if (firstRender)
             {
-                _sessionNotification = Container.GetService<UserNotificationService>();
+                _sessionNotification = Session.GetService<UserNotificationService>();
                 _sessionNotification.OnNotified += HandleNotification;
             }
 

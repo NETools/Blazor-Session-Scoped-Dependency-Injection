@@ -52,7 +52,7 @@ namespace BlazorSessionScopedContainer.Services
 
                 var notificationService = ((UserNotificationService)NSessionHandler
                     .Default().ServiceInstances[entry.Key]
-                    .Find(p => p.IsEqual(typeof(UserNotificationService))).GetInstance());
+                    .Find(p => p.AreServicesEqual(typeof(UserNotificationService))).GetServiceInstance());
 
                 notificationService.NotifyUser("The session has been closed. Refresh the page!", UserSessionNotification.SessionNotificationType.SessionClosed);
 
@@ -65,7 +65,7 @@ namespace BlazorSessionScopedContainer.Services
                 {
                     foreach (var item in loadedServiceSession)
                     {
-                        item.GetInstance().Dispose();
+                        item.GetServiceInstance().Dispose();
                     }
                     NSessionHandler.Default().Logger?.Invoke($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");
                     loadedServiceSession.Clear();

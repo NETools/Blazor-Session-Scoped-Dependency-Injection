@@ -44,7 +44,7 @@ namespace BlazorSessionScopedContainer.Core
                     ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
                 }
 
-                if (!ServiceInstances[session.Guid.Value].Exists(p => p.IsEqual<T>()))
+                if (!ServiceInstances[session.Guid.Value].Exists(p => p.AreServicesEqual<T>()))
                 {
                     ServiceInstances[session.Guid.Value].Add(new ServiceEntry<T>(this, session, args));
                 }
@@ -62,7 +62,7 @@ namespace BlazorSessionScopedContainer.Core
                     ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
                 }
 
-                if (!ServiceInstances[session.Guid.Value].Exists(p => p.IsEqual<Interface>()))
+                if (!ServiceInstances[session.Guid.Value].Exists(p => p.AreServicesEqual<Interface>()))
                 {
                     ServiceInstances[session.Guid.Value].Add(new ServiceInterfaceEntry<Interface, Concrete>(this, session, args));
                 }
@@ -78,9 +78,10 @@ namespace BlazorSessionScopedContainer.Core
                     ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
                 }
 
-                var instance = ServiceInstances[session.Guid.Value].Find(p => p.IsEqual<T>());
+                var instance = ServiceInstances[session.Guid.Value].Find(p => p.AreServicesEqual<T>());
                 if (instance != null)
                 {
+                    instance.GetServiceInstance().Dispose();
                     ServiceInstances[session.Guid.Value].Remove(instance);
                 }
             }
@@ -115,10 +116,10 @@ namespace BlazorSessionScopedContainer.Core
                     var paramInterfaces = param.ParameterType.GetInterfaces();
                     if (paramInterfaces.Contains(typeof(ISessionScoped)))
                     {
-                        var suitableService = ServiceInstances[session.Value].Find(p => p.IsEqual(param.ParameterType));
+                        var suitableService = ServiceInstances[session.Value].Find(p => p.AreServicesEqual(param.ParameterType));
 
                         if (suitableService != null)
-                            dependencies.Add(suitableService.GetInstance());
+                            dependencies.Add(suitableService.GetServiceInstance());
                     }
                 }
             }

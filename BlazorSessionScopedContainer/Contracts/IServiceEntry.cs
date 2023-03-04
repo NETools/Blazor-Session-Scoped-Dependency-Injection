@@ -8,9 +8,8 @@ namespace BlazorSessionScopedContainer.Contracts
 {
     internal interface IServiceEntry 
     {
-        bool IsEqual<Service>();
-        bool IsEqual(Type type);
-
-        ISessionScoped GetInstance();
+        bool AreServicesEqual<Service>();
+        bool AreServicesEqual(Type type);
+        ISessionScoped GetServiceInstance();
     }
 }

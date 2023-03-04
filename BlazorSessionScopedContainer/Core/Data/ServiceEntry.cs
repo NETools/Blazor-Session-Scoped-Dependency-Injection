@@ -20,17 +20,17 @@ namespace BlazorSessionScopedContainer.Core.Data
             });
         }
 
-        public virtual bool IsEqual<Service>()
+        public virtual bool AreServicesEqual<Service>()
         {
             return typeof(Service).Equals(ConcreteType);
         }
 
-        public virtual bool IsEqual(Type type)
+        public virtual bool AreServicesEqual(Type type)
         {
             return type.Equals(ConcreteType);
         }
 
-        public ISessionScoped GetInstance()
+        public ISessionScoped GetServiceInstance()
         {
             return _service.Value;
         }

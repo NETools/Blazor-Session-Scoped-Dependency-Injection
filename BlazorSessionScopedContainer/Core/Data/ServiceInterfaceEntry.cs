@@ -17,12 +17,12 @@ namespace BlazorSessionScopedContainer.Core.Data
             InterfaceType = typeof(Interface);
         }
 
-        public override bool IsEqual<Service>()
+        public override bool AreServicesEqual<Service>()
         {
             return typeof(Service).Equals(InterfaceType);
         }
 
-        public override bool IsEqual(Type type)
+        public override bool AreServicesEqual(Type type)
         {
             return type.Equals(InterfaceType);
         }

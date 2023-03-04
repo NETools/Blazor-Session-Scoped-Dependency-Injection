@@ -37,7 +37,7 @@ namespace BlazorSessionScopedContainer.Core
 
             RefreshSesion();
 
-            return (T?)NSessionHandler.Default().ServiceInstances[session.Value].Find(p => p.IsEqual<T>())?.GetInstance();
+            return (T?)NSessionHandler.Default().ServiceInstances[session.Value].Find(p => p.AreServicesEqual<T>())?.GetServiceInstance();
         }
 
         public void StartSession(Action<SessionId, NSessionHandler> initRoutine)
