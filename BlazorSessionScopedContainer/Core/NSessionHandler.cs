@@ -142,6 +142,7 @@ namespace BlazorSessionScopedContainer.Core
                         {
                             if (ServiceInstances.ContainsKey(session.Value))
                                 return ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
+                            else return new object();
                         }
 
                         return null;
