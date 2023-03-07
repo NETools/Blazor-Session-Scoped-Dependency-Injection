@@ -1,6 +1,7 @@
 ﻿using BlazorSessionScopedContainer.Contracts;
 using BlazorSessionScopedContainer.Core;
 using BlazorSessionScopedContainer.Services.Data;
+using BlazorSessionScopedContainer.Services.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +14,6 @@ namespace BlazorSessionScopedContainer.Services
     {
         private Timer _gcTimer;
         private int _timerPeriod = 60_000 * 5;
-
-        private SessionPersistence _sessionPersistence;
 
         /// <summary>
         /// In milliseconds
@@ -34,7 +33,6 @@ namespace BlazorSessionScopedContainer.Services
 
         internal NSessionGarbageCollection()
         {
-            _sessionPersistence = new SessionPersistence();
             InitializeTimer();
         }
 
@@ -67,7 +65,7 @@ namespace BlazorSessionScopedContainer.Services
                     foreach (var sessionService in loadedServiceSession)
                     {
                         var serviceInstance = sessionService.GetServiceInstance();
-                        _sessionPersistence.SaveService(entry.Key, serviceInstance);
+                        SessionPersistence.SaveService(entry.Key, serviceInstance);
                         serviceInstance.Dispose();
                     }
                     NSessionHandler.Default().Logger?.Invoke($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");

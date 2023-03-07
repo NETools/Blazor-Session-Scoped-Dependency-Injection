@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BlazorSessionScopedContainer.Misc.Json
+namespace BlazorSessionScopedContainer.Services.Persistence.Json
 {
     enum TokenType
     {

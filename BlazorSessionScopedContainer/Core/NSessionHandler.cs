@@ -2,17 +2,17 @@
 using BlazorSessionScopedContainer.Contracts;
 using BlazorSessionScopedContainer.Core.Data;
 using BlazorSessionScopedContainer.Misc;
-using BlazorSessionScopedContainer.Misc.Json;
 using BlazorSessionScopedContainer.Services;
+using BlazorSessionScopedContainer.Services.Persistence;
+using BlazorSessionScopedContainer.Services.Persistence.Json;
 using System.Collections.Concurrent;
+using System.Reflection;
 using System.Text.Json;
 
 namespace BlazorSessionScopedContainer.Core
 {
     public class NSessionHandler
     {
-        private NJson _json;
-
         internal Dictionary<Guid, List<IServiceEntry>> ServiceInstances { get; private set; } = new Dictionary<Guid, List<IServiceEntry>>();
         internal Dictionary<Guid, DateTime> SessionLastActiveTime { get; private set; } = new Dictionary<Guid, DateTime>();
         internal HashSet<Guid> InitializedServices { get; private set; } = new HashSet<Guid>();
@@ -26,7 +26,6 @@ namespace BlazorSessionScopedContainer.Core
         private NSessionHandler()
         {
             GarbageCollection = new NSessionGarbageCollection();
-            _json = new NJson();
         }
 
         private static NSessionHandler _sessionHandler;
@@ -130,13 +129,23 @@ namespace BlazorSessionScopedContainer.Core
                 }
             }
 
-
             instance = (T)Activator.CreateInstance(instanceType, dependencies.ToArray());
 
-            if (File.Exists($"{System.IO.Directory.GetCurrentDirectory()}\\wwwroot\\{session.Value}\\{typeof(T).FullName}.json"))
+            if (instanceType.GetInterfaces().Contains(typeof(ISavedSessionScoped)))
             {
-                string json = File.ReadAllText($"{System.IO.Directory.GetCurrentDirectory()}\\wwwroot\\{session.Value}\\{typeof(T).FullName}.json");
-                _json.Deserialize(session.Value, json, instance);
+                var json = SessionPersistence.RetrieveSession<T>(session);
+                if (json != null)
+                {
+                    NJson.DeserializeIntoInstance(json, instance, (p) =>
+                    {
+                        if (p.PropertyType.GetInterfaces().Contains(typeof(ISessionScoped)))
+                        {
+                            return ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
+                        }
+
+                        return null;
+                    });
+                }
             }
 
             var appropiateMethods = Helper.GetMethodsWithAttribute(instanceType, typeof(OnSessionInitialize));
