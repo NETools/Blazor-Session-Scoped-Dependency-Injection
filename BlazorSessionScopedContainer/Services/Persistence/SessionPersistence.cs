@@ -12,13 +12,13 @@ namespace BlazorSessionScopedContainer.Services.Persistence
 {
     internal static class SessionPersistence
     {
-        public static string RootFolder { get; set; } = $"{Directory.GetCurrentDirectory()}\\wwwroot";
+        public static string RootFolder { get; set; } = $"{Directory.GetCurrentDirectory()}\\wwwroot\\sessions";
 
         public static void SaveService(Guid? session, object instance)
         {
             var serviceType = instance.GetType();
             var serviceInterfaces = serviceType.GetInterfaces();
-            if (serviceInterfaces.Contains(typeof(ISavedSessionScoped)))
+            if (serviceInterfaces.Contains(typeof(IPersistentSessionScoped)))
             {
                 var json = NJson.SerializeInstance(instance);
                 if (!Directory.Exists($"{RootFolder}\\{session.Value}"))

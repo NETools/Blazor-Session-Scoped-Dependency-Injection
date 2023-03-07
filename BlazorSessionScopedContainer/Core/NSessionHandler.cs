@@ -131,7 +131,7 @@ namespace BlazorSessionScopedContainer.Core
 
             instance = (T)Activator.CreateInstance(instanceType, dependencies.ToArray());
 
-            if (instanceType.GetInterfaces().Contains(typeof(ISavedSessionScoped)))
+            if (instanceType.GetInterfaces().Contains(typeof(IPersistentSessionScoped)))
             {
                 var json = SessionPersistence.RetrieveSession<T>(session);
                 if (json != null)
@@ -140,7 +140,8 @@ namespace BlazorSessionScopedContainer.Core
                     {
                         if (p.PropertyType.GetInterfaces().Contains(typeof(ISessionScoped)))
                         {
-                            return ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
+                            if (ServiceInstances.ContainsKey(session.Value))
+                                return ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
                         }
 
                         return null;

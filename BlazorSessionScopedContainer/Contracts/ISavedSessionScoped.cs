@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BlazorSessionScopedContainer.Contracts
 {
-    public interface ISavedSessionScoped : ISessionScoped
+    public interface IPersistentSessionScoped : ISessionScoped
     {
     }
 }
