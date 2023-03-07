@@ -2,16 +2,20 @@
 using BlazorSessionScopedContainer.Contracts;
 using BlazorSessionScopedContainer.Core.Data;
 using BlazorSessionScopedContainer.Misc;
+using BlazorSessionScopedContainer.Misc.Json;
 using BlazorSessionScopedContainer.Services;
 using System.Collections.Concurrent;
+using System.Text.Json;
+
 namespace BlazorSessionScopedContainer.Core
 {
     public class NSessionHandler
     {
+        private NJson _json;
+
         internal Dictionary<Guid, List<IServiceEntry>> ServiceInstances { get; private set; } = new Dictionary<Guid, List<IServiceEntry>>();
         internal Dictionary<Guid, DateTime> SessionLastActiveTime { get; private set; } = new Dictionary<Guid, DateTime>();
         internal HashSet<Guid> InitializedServices { get; private set; } = new HashSet<Guid>();
-        
         public NSessionGarbageCollection GarbageCollection { get; private set; }
 
         public Action<string> Logger { get; set; } = (message) =>
@@ -21,7 +25,8 @@ namespace BlazorSessionScopedContainer.Core
 
         private NSessionHandler()
         {
-            GarbageCollection = new NSessionGarbageCollection();    
+            GarbageCollection = new NSessionGarbageCollection();
+            _json = new NJson();
         }
 
         private static NSessionHandler _sessionHandler;
@@ -35,7 +40,8 @@ namespace BlazorSessionScopedContainer.Core
             return _sessionHandler;
         }
 
-        public void AddService<T>(SessionId session, params object[] args) where T : class, ISessionScoped
+
+        private bool PrepareServiceHandler(SessionId session)
         {
             if (session.Guid.HasValue)
             {
@@ -44,6 +50,16 @@ namespace BlazorSessionScopedContainer.Core
                     ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
                 }
 
+                return true;
+            }
+
+            return false;
+        }
+
+        public void AddService<T>(SessionId session, params object[] args) where T : class, ISessionScoped
+        {
+            if (PrepareServiceHandler(session))
+            {
                 if (!ServiceInstances[session.Guid.Value].Exists(p => p.AreServicesEqual<T>()))
                 {
                     ServiceInstances[session.Guid.Value].Add(new ServiceEntry<T>(this, session, args));
@@ -51,17 +67,12 @@ namespace BlazorSessionScopedContainer.Core
             }
         }
 
-        public void AddService<Interface, Concrete>(SessionId session, params object[] args) 
-            where Interface : class, ISessionScoped 
+        public void AddService<Interface, Concrete>(SessionId session, params object[] args)
+            where Interface : class, ISessionScoped
             where Concrete : class, Interface
         {
-            if (session.Guid.HasValue)
+            if (PrepareServiceHandler(session))
             {
-                if (!ServiceInstances.ContainsKey(session.Guid.Value))
-                {
-                    ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
-                }
-
                 if (!ServiceInstances[session.Guid.Value].Exists(p => p.AreServicesEqual<Interface>()))
                 {
                     ServiceInstances[session.Guid.Value].Add(new ServiceInterfaceEntry<Interface, Concrete>(this, session, args));
@@ -71,13 +82,8 @@ namespace BlazorSessionScopedContainer.Core
 
         public void RemoveService<T>(SessionId session) where T : class, ISessionScoped
         {
-            if (session.Guid.HasValue)
+            if (PrepareServiceHandler(session))
             {
-                if (!ServiceInstances.ContainsKey(session.Guid.Value))
-                {
-                    ServiceInstances.Add(session.Guid.Value, new List<IServiceEntry>());
-                }
-
                 var instance = ServiceInstances[session.Guid.Value].Find(p => p.AreServicesEqual<T>());
                 if (instance != null)
                 {
@@ -124,7 +130,14 @@ namespace BlazorSessionScopedContainer.Core
                 }
             }
 
+
             instance = (T)Activator.CreateInstance(instanceType, dependencies.ToArray());
+
+            if (File.Exists($"{System.IO.Directory.GetCurrentDirectory()}\\wwwroot\\{session.Value}\\{typeof(T).FullName}.json"))
+            {
+                string json = File.ReadAllText($"{System.IO.Directory.GetCurrentDirectory()}\\wwwroot\\{session.Value}\\{typeof(T).FullName}.json");
+                _json.Deserialize(session.Value, json, instance);
+            }
 
             var appropiateMethods = Helper.GetMethodsWithAttribute(instanceType, typeof(OnSessionInitialize));
             if (appropiateMethods.Any())

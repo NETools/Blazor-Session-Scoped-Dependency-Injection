@@ -33,15 +33,11 @@ namespace BlazorSessionScopedContainer.RazorComponents
             });
         }
 
-        protected override void OnAfterRender(bool firstRender)
+        protected override void OnInitialized()
         {
-            if (firstRender)
-            {
-                _sessionNotification = Session.GetService<UserNotificationService>();
-                _sessionNotification.OnNotified += HandleNotification;
-            }
-
-            base.OnAfterRender(firstRender);
+            _sessionNotification = Session.GetService<UserNotificationService>();
+            _sessionNotification.OnNotified += HandleNotification;
+            base.OnInitialized();
         }
 
         public void Dispose()

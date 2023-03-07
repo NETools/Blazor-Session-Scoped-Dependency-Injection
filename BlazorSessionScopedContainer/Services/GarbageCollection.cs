@@ -14,6 +14,8 @@ namespace BlazorSessionScopedContainer.Services
         private Timer _gcTimer;
         private int _timerPeriod = 60_000 * 5;
 
+        private SessionPersistence _sessionPersistence;
+
         /// <summary>
         /// In milliseconds
         /// </summary>
@@ -32,6 +34,7 @@ namespace BlazorSessionScopedContainer.Services
 
         internal NSessionGarbageCollection()
         {
+            _sessionPersistence = new SessionPersistence();
             InitializeTimer();
         }
 
@@ -54,8 +57,6 @@ namespace BlazorSessionScopedContainer.Services
                     .Default().ServiceInstances[entry.Key]
                     .Find(p => p.AreServicesEqual(typeof(UserNotificationService))).GetServiceInstance());
 
-                notificationService.NotifyUser("The session has been closed. Refresh the page!", UserSessionNotification.SessionNotificationType.SessionClosed);
-
                 NSessionHandler.Default().SessionLastActiveTime.Remove(entry.Key, out DateTime dateTime);
                 NSessionHandler.Default().InitializedServices.Remove(entry.Key);
                 NSessionHandler.Default().ServiceInstances.Remove(entry.Key, out List<IServiceEntry> loadedServiceSession);
@@ -63,13 +64,18 @@ namespace BlazorSessionScopedContainer.Services
                 NSessionHandler.Default().Logger?.Invoke($"[*] Session closed for {entry}");
                 if (loadedServiceSession != null)
                 {
-                    foreach (var item in loadedServiceSession)
+                    foreach (var sessionService in loadedServiceSession)
                     {
-                        item.GetServiceInstance().Dispose();
+                        var serviceInstance = sessionService.GetServiceInstance();
+                        _sessionPersistence.SaveService(entry.Key, serviceInstance);
+                        serviceInstance.Dispose();
                     }
                     NSessionHandler.Default().Logger?.Invoke($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");
                     loadedServiceSession.Clear();
                 }
+
+                notificationService.NotifyUser("The session has been closed. Refresh the page!", UserSessionNotification.SessionNotificationType.SessionClosed);
+
             }
         }
 

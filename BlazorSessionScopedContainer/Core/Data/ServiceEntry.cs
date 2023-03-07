@@ -14,6 +14,8 @@ namespace BlazorSessionScopedContainer.Core.Data
         public ServiceEntry(NSessionHandler handler, SessionId sessionId, object[] args)
         {
             ConcreteType = typeof(T);
+
+            var loadFromDisc = ConcreteType.GetInterfaces().Contains(typeof(ISavedSessionScoped));
             _service = new Lazy<T>(() =>
             {
                 return handler.GetInstance<T>(sessionId.Guid, args);
