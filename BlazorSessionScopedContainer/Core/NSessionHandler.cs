@@ -108,24 +108,20 @@ namespace BlazorSessionScopedContainer.Core
 
 			List<object> dependencies = new List<object>();
 
-			foreach (var param in ctorParams)
-			{
-				if (param.ParameterType.Equals(GetType()))
-				{
-					dependencies.Add(this);
-				}
-				else
-				{
-					var paramInterfaces = param.ParameterType.GetInterfaces();
-					if (paramInterfaces.Contains(typeof(ISessionScoped)))
-					{
-						var suitableService = ServiceInstances[session.Value].Find(p => p.AreServicesEqual(param.ParameterType));
-
-						if (suitableService != null)
-							dependencies.Add(suitableService.GetServiceInstance());
-					}
-				}
-			}
+            foreach (var param in ctorParams)
+            {
+                var paramInterfaces = param.ParameterType.GetInterfaces();
+                if (paramInterfaces.Contains(typeof(ISessionScoped)))
+                {
+                    if (ServiceInstances.ContainsKey(session.Value))
+                    {
+                        var suitableService = ServiceInstances[session.Value].Find(p => p.AreServicesEqual(param.ParameterType));
+                        if (suitableService != null)
+                            dependencies.Add(suitableService.GetServiceInstance());
+                    }
+                    else dependencies.Add(null);
+                }
+            }
 
             return dependencies.ToArray();
 		}
@@ -144,14 +140,29 @@ namespace BlazorSessionScopedContainer.Core
                 {
                     NJson.DeserializeIntoInstance(json, instance, (p) =>
                     {
+                        NJson.NJsonInstanciatorResult instanciatorResult = new NJson.NJsonInstanciatorResult();
+                        instanciatorResult.Code = NJson.NJsonInstanciatorResultCode.Failed;
+
                         if (p.PropertyType.GetInterfaces().Contains(typeof(ISessionScoped)))
                         {
                             if (ServiceInstances.ContainsKey(session.Value))
-                                return ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
-                            else return new object();
+                            {
+                                instanciatorResult.Code = NJson.NJsonInstanciatorResultCode.Success;
+                                if (ServiceInstances.ContainsKey(session.Value))
+                                {
+                                    instanciatorResult.Value = ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
+                                }
+                            }
+                            else
+                            {
+                                instanciatorResult.Code = NJson.NJsonInstanciatorResultCode.SessionUnknown;
+                                instanciatorResult.Value = null;
+                            }
+
+                            return instanciatorResult;
                         }
 
-                        return null;
+                        return instanciatorResult;
                     });
                 }
             }

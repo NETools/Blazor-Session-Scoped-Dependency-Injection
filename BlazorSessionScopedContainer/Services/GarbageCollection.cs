@@ -51,6 +51,9 @@ namespace BlazorSessionScopedContainer.Services
             {
                 var entry = oldSessions[i];
 
+                if (!NSessionHandler.Default().ServiceInstances.ContainsKey(entry.Key))
+                    continue;
+
                 var notificationService = ((UserNotificationService)NSessionHandler
                     .Default().ServiceInstances[entry.Key]
                     .Find(p => p.AreServicesEqual(typeof(UserNotificationService))).GetServiceInstance());

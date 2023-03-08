@@ -12,11 +12,24 @@ namespace BlazorSessionScopedContainer.Services.Persistence.Json
 {
     internal class NJson
     {
+        public enum NJsonInstanciatorResultCode
+        {
+            Success,
+            SessionUnknown,
+            Failed
+        }
+
+        internal class NJsonInstanciatorResult
+        {
+            public NJsonInstanciatorResultCode Code { get; set; }
+            public object Value;
+        }
+
         public static string SerializeInstance(object instance)
         {
             return JsonSerializer.Serialize(instance);
         }
-        public static void DeserializeIntoInstance(string json, object instance, Func<PropertyInfo, object> classInstanciator)
+        public static void DeserializeIntoInstance(string json, object instance, Func<PropertyInfo, NJsonInstanciatorResult> classInstanciator)
         {
             var properties = instance.GetType().GetProperties().ToList();
             var tokenStream = JsonTokenizer.NormalizeTokenStream(JsonTokenizer.TokenizeJson(json)).GetEnumerator();
@@ -55,14 +68,14 @@ namespace BlazorSessionScopedContainer.Services.Persistence.Json
                             subJsonBuilder.Append(current.Value);
                         }
                         var subJson = subJsonBuilder.ToString();
-                        var propertyInstance = classInstanciator(propertyInfo);
-                        if (propertyInstance == null)
+                        var propertyInstanceResult = classInstanciator(propertyInfo);
+                        if (propertyInstanceResult.Code == NJsonInstanciatorResultCode.Failed)
                         {
-                            propertyInstance = Activator.CreateInstance(propertyInfo.PropertyType);
-                            DeserializeIntoInstance(subJson, propertyInstance, classInstanciator);
+                            propertyInstanceResult.Value = Activator.CreateInstance(propertyInfo.PropertyType);
+                            DeserializeIntoInstance(subJson, propertyInstanceResult.Value, classInstanciator);
                         }
 
-                        propertyInfo.SetValue(instance, propertyInstance);
+                        propertyInfo.SetValue(instance, propertyInstanceResult.Value);
 
                     }
                     else if (tokenStream.Current.TokenType == TokenType.QuoteSign || tokenStream.Current.TokenType == TokenType.String)
