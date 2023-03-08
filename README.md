@@ -1,14 +1,14 @@
-- 1 -
+#- 1 -
 
-# Blazor Session Scoped Container
+## Blazor Session Scoped Container
 
-## What is this?
+### What is this?
 
 Whenever a user connects to your blazor website, the object instances used inside your Blazor Server App are kept until the user either closes the connections or reconnects (e.g. by pressing F5).
 
 Blazor Session Scoped Dependency Injection allows you' to add services wich instances are kept even if the user disconnects and connects back a while later.
 
-## How does it work?
+### How does it work?
 
 It basically assigns every visiting user a session id in a form of a cookie. Whenever a service is added, the service instance is associated with that unique sesion id. The service instances are stored internally in a static dictionary. So the lifetime of a service object is invariant to the users connection/disconnection.
 
@@ -17,7 +17,7 @@ If the session must not be lost entirely, you can persist the object instance in
 
 Whenever the user with that particular session id connects to the website again, the json file will be read, parsed and the previous session will be restored.
 
-## How to use it?
+### How to use it?
 
 First and foremost add the `IHttpContextAccessor` to your blazor app:
 
