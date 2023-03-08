@@ -148,10 +148,7 @@ namespace BlazorSessionScopedContainer.Core
                             if (ServiceInstances.ContainsKey(session.Value))
                             {
                                 instanciatorResult.Code = NJson.NJsonInstanciatorResultCode.Success;
-                                if (ServiceInstances.ContainsKey(session.Value))
-                                {
-                                    instanciatorResult.Value = ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
-                                }
+                                instanciatorResult.Value = ServiceInstances[session.Value].Find(s => s.AreServicesEqual(p.PropertyType)).GetServiceInstance();
                             }
                             else
                             {
