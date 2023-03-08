@@ -10,21 +10,20 @@ Blazor Session Scoped Dependency Injection allows you' to add services wich inst
 
 ### How does it work?
 
-It basically assigns every visiting user a session id in a form of a cookie. Whenever a service is added, the service instance is associated with that unique sesion id. The service instances are stored internally in a static dictionary. So the lifetime of a service object is invariant to the users connection/disconnection.
+It basically assigns every visiting user a session id in a form of a cookie. Whenever a service is added, the service instance is associated with that unique session id. The service instances are stored internally in a static dictionary, such that the lifetime of a service object is invariant to the user's connection's/disconnection's.
 
-In order to save memory, every user-specified second/minute/hour/day a garbage collector is activated which filters out inactive user sessions and removes it.
-If the session must not be lost entirely, you can persist the object instance in a json format and save it to the disc.
-
+In order to save memory, every user-specified second/minute/hour/day a garbage collector is activated which filters out inactive user sessions and disposes and removes them.
+If the session must not be lost entirely, you can persist the object instance in a json format and save it to the disk.
 Whenever the user with that particular session id connects to the website again, the json file will be read, parsed and the previous session will be restored.
 
 ### How to use it?
 
-First and foremost add the `IHttpContextAccessor` to your blazor app:
+First and foremost add the `IHttpContextAccessor` interface to your blazor app like so
 
 ```
 builder.Services.AddHttpContextAccessor();
 ```
-Having done that proceed to add the `NSession` service to your blazor with `.AddScoped` like so
+Having done that proceed to add the `NSession` service to your blazor with `.AddScoped` like that
 
 ```
 builder.Services.AddScoped<NSession>();
@@ -32,8 +31,7 @@ builder.Services.AddScoped<NSession>();
 
 First step **done**!
 
-Whenever you want to create a service class that is invariant to user's connects/disconnects implement the `ISessionScoped` interface in your service. Whenever the session should be restorable implement instead `IPersistentSessionScoped`.
-
+Whenever you want to create a service class that is invariant to a user's reconnects/disconnects implement the `ISessionScoped` interface in your service. Whenever the session should be restorable even after being disposed by the garbage collector implement `IPersistentSessionScoped` instead.
 
 In order to register the services go to the `_Host.cshtml` file and add following lines
 
@@ -49,7 +47,7 @@ In order to register the services go to the `_Host.cshtml` file and add followin
 }
 ```
 
-Whenever a user connects services will be registered with for his unique session id.
+Whenever a user now connects, the registered services will be associated with his unique session id.
 
 In order to notify the user that his session has ended (i.e. the garbage collector considered the user to be inactive) go to the `MainLayout.razor` file and replace it with
 
@@ -107,7 +105,7 @@ In order to load a registered service in an arbitrary page first inherit `NSessi
 @inherits NSessionComponentBase
 ```
 
-The `NSessionComponentBase` does - among other things - refresh the session whenver the page is re-rendered. It also provides an instance of  `NSession` with which the user can get the services he registered in ```_Host.cshtml```:
+The `NSessionComponentBase` class does refresh the session whenver the page is re-rendered. It also provides an instance of `NSession` with which the user can get the services he registered in ```_Host.cshtml```:
 
 ```
 @page "/counter"
