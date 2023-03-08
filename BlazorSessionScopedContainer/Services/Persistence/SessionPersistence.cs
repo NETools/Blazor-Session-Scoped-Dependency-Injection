@@ -17,15 +17,10 @@ namespace BlazorSessionScopedContainer.Services.Persistence
         public static void SaveService(Guid? session, object instance)
         {
             var serviceType = instance.GetType();
-            var serviceInterfaces = serviceType.GetInterfaces();
-            if (serviceInterfaces.Contains(typeof(IPersistentSessionScoped)))
-            {
-                var json = NJson.SerializeInstance(instance);
-                if (!Directory.Exists($"{RootFolder}\\{session.Value}"))
-                    Directory.CreateDirectory($"{RootFolder}\\{session.Value}");
-
-                File.WriteAllText($"{RootFolder}\\{session.Value}\\{serviceType.FullName}.json", json);
-            }
+            var json = NJson.SerializeInstance(instance);
+            if (!Directory.Exists($"{RootFolder}\\{session.Value}"))
+                Directory.CreateDirectory($"{RootFolder}\\{session.Value}");
+            File.WriteAllText($"{RootFolder}\\{session.Value}\\{serviceType.FullName}.json", json);
         }
 
         public static string RetrieveSession<T>(Guid? session) 

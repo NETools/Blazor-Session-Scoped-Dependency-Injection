@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace BlazorSessionScopedContainer.Services
 {
-    public class NSessionGarbageCollection
+    public class NSessionGarbageCollector
     {
         private Timer _gcTimer;
         private int _timerPeriod = 60_000 * 5;
@@ -31,7 +31,7 @@ namespace BlazorSessionScopedContainer.Services
             }
         }
 
-        internal NSessionGarbageCollection()
+        internal NSessionGarbageCollector()
         {
             InitializeTimer();
         }
@@ -68,7 +68,10 @@ namespace BlazorSessionScopedContainer.Services
                     foreach (var sessionService in loadedServiceSession)
                     {
                         var serviceInstance = sessionService.GetServiceInstance();
-                        SessionPersistence.SaveService(entry.Key, serviceInstance);
+                        if (serviceInstance.GetType().GetInterfaces().Contains(typeof(IPersistentSessionScoped)))
+                        {
+                            SessionPersistence.SaveService(entry.Key, serviceInstance);
+                        }
                         serviceInstance.Dispose();
                     }
                     NSessionHandler.Default().Logger?.Invoke($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");

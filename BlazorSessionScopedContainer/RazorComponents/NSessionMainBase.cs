@@ -36,7 +36,10 @@ namespace BlazorSessionScopedContainer.RazorComponents
         protected override void OnInitialized()
         {
             _sessionNotification = Session.GetService<UserNotificationService>();
-            _sessionNotification.OnNotified += HandleNotification;
+            if (_sessionNotification != null)
+            {
+                _sessionNotification.OnNotified += HandleNotification;
+            }
             base.OnInitialized();
         }
 
