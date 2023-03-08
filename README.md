@@ -105,7 +105,7 @@ In order to load a registered service in an arbitrary page first inherit `NSessi
 @inherits NSessionComponentBase
 ```
 
-The `NSessionComponentBase` class does refresh the session whenver the page is re-rendered. It also provides an instance of `NSession` with which the user can get the services he registered in ```_Host.cshtml```:
+The `NSessionComponentBase` class does refresh the session whenver the page is re-rendered. It also provides an instance of `NSession` with which the user can retrieve the services he registered in ```_Host.cshtml```:
 
 ```
 @page "/counter"
