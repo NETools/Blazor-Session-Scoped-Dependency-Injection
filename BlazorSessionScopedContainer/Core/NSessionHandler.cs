@@ -92,44 +92,50 @@ namespace BlazorSessionScopedContainer.Core
             }
         }
 
-        internal T GetInstance<T>(Guid? session, params object[] args) where T : class, ISessionScoped
+        private object[] GetConstructorDependencies(Guid? session, Type currentType)
+        {
+			var ctors = currentType.GetConstructors();
+			if (ctors.Length > 1)
+			{
+				throw new InvalidOperationException();
+			}
+
+			var ctor = ctors[0];
+			var ctorParams = ctor.GetParameters();
+
+			if (!session.HasValue)
+				return default;
+
+			List<object> dependencies = new List<object>();
+
+			foreach (var param in ctorParams)
+			{
+				if (param.ParameterType.Equals(GetType()))
+				{
+					dependencies.Add(this);
+				}
+				else
+				{
+					var paramInterfaces = param.ParameterType.GetInterfaces();
+					if (paramInterfaces.Contains(typeof(ISessionScoped)))
+					{
+						var suitableService = ServiceInstances[session.Value].Find(p => p.AreServicesEqual(param.ParameterType));
+
+						if (suitableService != null)
+							dependencies.Add(suitableService.GetServiceInstance());
+					}
+				}
+			}
+
+            return dependencies.ToArray();
+		}
+
+        internal T GetInstance<T>(Guid? session, params object[] args)
         {
             var instanceType = typeof(T);
-            var ctors = instanceType.GetConstructors();
-            if (ctors.Length > 1)
-            {
-                throw new InvalidOperationException();
-            }
+            var dependencies = GetConstructorDependencies(session, instanceType);
 
-            var ctor = ctors[0];
-            var ctorParams = ctor.GetParameters();
-
-            if (!session.HasValue)
-                return default;
-
-            T instance = default;
-            List<object> dependencies = new List<object>();
-
-            foreach (var param in ctorParams)
-            {
-                if (param.ParameterType.Equals(GetType()))
-                {
-                    dependencies.Add(this);
-                }
-                else
-                {
-                    var paramInterfaces = param.ParameterType.GetInterfaces();
-                    if (paramInterfaces.Contains(typeof(ISessionScoped)))
-                    {
-                        var suitableService = ServiceInstances[session.Value].Find(p => p.AreServicesEqual(param.ParameterType));
-
-                        if (suitableService != null)
-                            dependencies.Add(suitableService.GetServiceInstance());
-                    }
-                }
-            }
-
-            instance = (T)Activator.CreateInstance(instanceType, dependencies.ToArray());
+            T instance = (T)Activator.CreateInstance(instanceType, dependencies.ToArray());
 
             if (instanceType.GetInterfaces().Contains(typeof(IPersistentSessionScoped)))
             {

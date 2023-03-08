@@ -40,6 +40,15 @@ namespace BlazorSessionScopedContainer.Core
             return (T?)NSessionHandler.Default().ServiceInstances[session.Value].Find(p => p.AreServicesEqual<T>())?.GetServiceInstance();
         }
 
+        public T? New<T>(params object[] args)
+		{
+			var session = GetSession();
+			if (!session.HasValue)
+				return default;
+
+            return NSessionHandler.Default().GetInstance<T>(session, args);
+        }
+
         public void StartSession(Action<SessionId, NSessionHandler> initRoutine)
         {
             if (_httpContext.HttpContext?.Request.Cookies.ContainsKey("session") == false)

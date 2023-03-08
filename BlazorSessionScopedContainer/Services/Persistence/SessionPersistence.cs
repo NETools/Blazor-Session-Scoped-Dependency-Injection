@@ -28,7 +28,7 @@ namespace BlazorSessionScopedContainer.Services.Persistence
             }
         }
 
-        public static string RetrieveSession<T>(Guid? session) where T : class, ISessionScoped
+        public static string RetrieveSession<T>(Guid? session) 
         {
             if (File.Exists($"{RootFolder}\\{session.Value}\\{typeof(T).FullName}.json"))
             {
