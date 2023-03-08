@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BlazorSessionScopedContainer.Services.Persistence.Json
 {
-    internal class JsonTokenizer
+    internal static class JsonTokenizer
     {
-        public IEnumerable<JsonToken> NormalizeTokenStream(IEnumerable<JsonToken> tokens)
+        public static IEnumerable<JsonToken> NormalizeTokenStream(IEnumerable<JsonToken> tokens)
         {
             var tokenStream = tokens.GetEnumerator();
 
@@ -43,7 +43,7 @@ namespace BlazorSessionScopedContainer.Services.Persistence.Json
             }
         }
 
-        public IEnumerable<JsonToken> TokenizeJson(string json)
+        public static IEnumerable<JsonToken> TokenizeJson(string json)
         {
             Dictionary<char, TokenType> tokenTypes = new Dictionary<char, TokenType>()
             {

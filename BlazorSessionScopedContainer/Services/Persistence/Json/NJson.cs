@@ -19,10 +19,7 @@ namespace BlazorSessionScopedContainer.Services.Persistence.Json
         public static void DeserializeIntoInstance(string json, object instance, Func<PropertyInfo, object> classInstanciator)
         {
             var properties = instance.GetType().GetProperties().ToList();
-
-            JsonTokenizer tokenizer = new JsonTokenizer();
-
-            var tokenStream = tokenizer.NormalizeTokenStream(tokenizer.TokenizeJson(json)).GetEnumerator();
+            var tokenStream = JsonTokenizer.NormalizeTokenStream(JsonTokenizer.TokenizeJson(json)).GetEnumerator();
             tokenStream.MoveNext(); // {
 
             while (tokenStream.MoveNext())
