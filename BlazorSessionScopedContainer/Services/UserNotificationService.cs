@@ -1,4 +1,4 @@
-﻿using BlazorSessionScopedContainer.Contracts;
+﻿using BlazorSessionScopedContainer.Contracts.SessionsScoped;
 using BlazorSessionScopedContainer.Services.Data;
 using static BlazorSessionScopedContainer.Services.Data.UserSessionNotification;
 

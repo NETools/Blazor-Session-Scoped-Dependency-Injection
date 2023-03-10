@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BlazorSessionScopedContainer.Contracts
+namespace BlazorSessionScopedContainer.Contracts.GlobalScoped
 {
-    public interface IPersistentSessionScoped : ISessionScoped
+    public interface IGlobalScoped
     {
     }
 }

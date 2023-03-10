@@ -10,26 +10,47 @@ using System.Threading.Tasks;
 
 namespace BlazorSessionScopedContainer.Services.Persistence
 {
-    internal static class SessionPersistence
+    public static class SessionPersistence
     {
-        public static string RootFolder { get; set; } = $"{Directory.GetCurrentDirectory()}\\wwwroot\\sessions";
+        public static string RootFolderSessions { get; set; } = $"{Directory.GetCurrentDirectory()}\\sessions";
+        public static string RootFolderGlobal { get; set; } = $"{Directory.GetCurrentDirectory()}\\globals";
 
-        public static void SaveService(Guid? session, object instance)
+        internal static void SaveSession(Guid? session, object instance)
         {
             var serviceType = instance.GetType();
             var json = NJson.SerializeInstance(instance);
-            if (!Directory.Exists($"{RootFolder}\\{session.Value}"))
-                Directory.CreateDirectory($"{RootFolder}\\{session.Value}");
-            File.WriteAllText($"{RootFolder}\\{session.Value}\\{serviceType.FullName}.json", json);
+            if (!Directory.Exists($"{RootFolderSessions}\\{session.Value}"))
+                Directory.CreateDirectory($"{RootFolderSessions}\\{session.Value}");
+            File.WriteAllText($"{RootFolderSessions}\\{session.Value}\\{serviceType.FullName}.json", json);
         }
 
-        public static string RetrieveSession<T>(Guid? session) 
+        internal static string RetrieveSession<T>(Guid? session) 
         {
-            if (File.Exists($"{RootFolder}\\{session.Value}\\{typeof(T).FullName}.json"))
+            if (File.Exists($"{RootFolderSessions}\\{session.Value}\\{typeof(T).FullName}.json"))
             {
-                return File.ReadAllText($"{RootFolder}\\{session.Value}\\{typeof(T).FullName}.json");
+                return File.ReadAllText($"{RootFolderSessions}\\{session.Value}\\{typeof(T).FullName}.json");
             }
             return null;
         }
+
+        internal static void SaveGlobal(object instance)
+        {
+            var serviceType = instance.GetType();
+            var json = NJson.SerializeInstance(instance);
+            if (!Directory.Exists($"{RootFolderGlobal}"))
+                Directory.CreateDirectory($"{RootFolderGlobal}");
+            File.WriteAllText($"{RootFolderGlobal}\\{serviceType.FullName}.json", json);
+        }
+
+        internal static string RetrieveGlobal<T>()
+        {
+            if (File.Exists($"{RootFolderGlobal}\\{typeof(T).FullName}.json"))
+            {
+                return File.ReadAllText($"{RootFolderGlobal}\\{typeof(T).FullName}.json");
+            }
+            return null;
+        }
+
+
     }
 }

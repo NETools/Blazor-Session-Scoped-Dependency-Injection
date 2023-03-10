@@ -1,11 +1,12 @@
 ﻿using BlazorSessionScopedContainer.Contracts;
+using BlazorSessionScopedContainer.Contracts.SessionsScoped;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BlazorSessionScopedContainer.Core.Data
+namespace BlazorSessionScopedContainer.Core.Data.SessionScoped
 {
     internal class ServiceEntry<T> : IServiceEntry where T : class, ISessionScoped
     {
@@ -17,7 +18,7 @@ namespace BlazorSessionScopedContainer.Core.Data
 
             _service = new Lazy<T>(() =>
             {
-                return handler.GetInstance<T>(sessionId.Guid, args);
+                return handler.GetSessionInstance<T>(sessionId.Guid, args);
             });
         }
 
@@ -31,7 +32,7 @@ namespace BlazorSessionScopedContainer.Core.Data
             return type.Equals(ConcreteType);
         }
 
-        public ISessionScoped GetServiceInstance()
+        public object GetServiceInstance()
         {
             return _service.Value;
         }

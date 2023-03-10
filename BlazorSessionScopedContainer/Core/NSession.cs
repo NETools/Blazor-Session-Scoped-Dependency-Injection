@@ -1,4 +1,6 @@
 ﻿using BlazorSessionScopedContainer.Contracts;
+using BlazorSessionScopedContainer.Contracts.GlobalScoped;
+using BlazorSessionScopedContainer.Contracts.SessionsScoped;
 using BlazorSessionScopedContainer.Services;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
@@ -40,13 +42,19 @@ namespace BlazorSessionScopedContainer.Core
             return (T?)NSessionHandler.Default().ServiceInstances[session.Value].Find(p => p.AreServicesEqual<T>())?.GetServiceInstance();
         }
 
+        public T? GetGlobalService<T>() where T: class, IGlobalScoped
+        {
+            RefreshSesion();
+            return (T?)NSessionHandler.Default().GlobalServices.Find(p => p.AreServicesEqual<T>())?.GetServiceInstance();
+        }
+
         public T? New<T>(params object[] args)
 		{
 			var session = GetSession();
 			if (!session.HasValue)
 				return default;
 
-            return NSessionHandler.Default().GetInstance<T>(session, args);
+            return NSessionHandler.Default().GetSessionInstance<T>(session, args);
         }
 
         public void StartSession(Action<SessionId, NSessionHandler> initRoutine)

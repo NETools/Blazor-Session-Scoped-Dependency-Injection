@@ -46,6 +46,16 @@ namespace BlazorSessionScopedContainer.Services
 
         private void Collect()
         {
+
+            foreach (var sessionService in NSessionHandler.Default().GlobalServices)
+            {
+                var serviceInstance = sessionService.GetServiceInstance();
+                if (serviceInstance.GetType().GetInterfaces().Contains(typeof(IPersist)))
+                {
+                    SessionPersistence.SaveGlobal(serviceInstance);
+                }
+            }
+
             var oldSessions = NSessionHandler.Default().SessionLastActiveTime.Select(p => p).ToList().FindAll(p => (DateTime.Now - p.Value).TotalMilliseconds > _timerPeriod);
             for (int i = 0; i < oldSessions.Count; i++)
             {
@@ -68,11 +78,11 @@ namespace BlazorSessionScopedContainer.Services
                     foreach (var sessionService in loadedServiceSession)
                     {
                         var serviceInstance = sessionService.GetServiceInstance();
-                        if (serviceInstance.GetType().GetInterfaces().Contains(typeof(IPersistentSessionScoped)))
+                        if (serviceInstance.GetType().GetInterfaces().Contains(typeof(IPersist)))
                         {
-                            SessionPersistence.SaveService(entry.Key, serviceInstance);
+                            SessionPersistence.SaveSession(entry.Key, serviceInstance);
                         }
-                        serviceInstance.Dispose();
+                        ((IDisposable)serviceInstance).Dispose();
                     }
                     NSessionHandler.Default().Logger?.Invoke($"[**] Removed {loadedServiceSession.Count} services for session {entry.Key}");
                     loadedServiceSession.Clear();

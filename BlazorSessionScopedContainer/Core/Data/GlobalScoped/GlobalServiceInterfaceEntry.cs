@@ -1,18 +1,19 @@
-﻿using BlazorSessionScopedContainer.Contracts;
+﻿using BlazorSessionScopedContainer.Contracts.GlobalScoped;
+using BlazorSessionScopedContainer.Core.Data.SessionScoped;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BlazorSessionScopedContainer.Core.Data
+namespace BlazorSessionScopedContainer.Core.Data.GlobalScoped
 {
-    internal class ServiceInterfaceEntry<Interface, Concrete> : ServiceEntry<Concrete>
-        where Interface : class, ISessionScoped
+    internal class GlobalServiceInterfaceEntry<Interface, Concrete> : GlobalServiceEntry<Concrete>
+        where Interface : class, IGlobalScoped
         where Concrete : class, Interface
     {
         Type InterfaceType { get; set; }
-        public ServiceInterfaceEntry(NSessionHandler handler, SessionId sessionId, object[] args) : base(handler, sessionId, args)
+        public GlobalServiceInterfaceEntry(NSessionHandler handler, object[] args) : base(handler, args)
         {
             InterfaceType = typeof(Interface);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BlazorSessionScopedContainer.Contracts.SessionsScoped;
 
 namespace BlazorSessionScopedContainer.Contracts
 {
@@ -10,6 +11,6 @@ namespace BlazorSessionScopedContainer.Contracts
     {
         bool AreServicesEqual<Service>();
         bool AreServicesEqual(Type type);
-        ISessionScoped GetServiceInstance();
+        object GetServiceInstance();
     }
 }
